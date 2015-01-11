@@ -17,6 +17,7 @@ namespace tvviewer
 		private static Sdl.SDL_Rect rect;
 		private static Adapter adapter;
 		private static Thread thread;
+		private static bool running;
 		
 		public TVViewer()
 		{
@@ -51,6 +52,7 @@ namespace tvviewer
 			adapter.Input.Tuner.Frequency = (uint)(217.25 * 16);
 			
 			adapter.StartStreaming();
+			running = true;
 			thread = new Thread(readBuffer);
 			thread.Start();
 			
@@ -61,7 +63,7 @@ namespace tvviewer
 		{
 			byte[] buffer = new byte[720*576*2];
 			
-			while (true)
+			while (running)
 				if (adapter.VideoStream.Read(buffer, 0, 720*576*2) > 0)
 					drawBuffer(buffer);
 		}
@@ -85,7 +87,8 @@ namespace tvviewer
 		
 		private void quit(object sender, QuitEventArgs e)
 		{
-			thread.Abort();
+			running = false;
+			thread.Join();
 			
 			adapter.StopStreaming();
 			adapter.SetControlValue(Control.Mute, 1);
